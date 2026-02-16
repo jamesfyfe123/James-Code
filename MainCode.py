@@ -1535,7 +1535,7 @@ def customerBookingMenu():
 
     top = tk.Toplevel(root)
     top.title("Book a Lesson")
-    top.geometry("900x550")  # Slightly taller to accommodate date picker
+    top.geometry("900x550")  
     top.resizable(False, False)
     top.configure(bg="#BCF0FE")
 
@@ -1552,7 +1552,7 @@ def customerBookingMenu():
 
     tk.Label(date_frame, text="Select Date:", bg="#BCF0FE", font=("Aptos", 11)).grid(row=0, column=0, padx=5)
 
-    # Try to use tkcalendar DateEntry – fallback to normal Entry if not installed
+    
     try:
         from tkcalendar import DateEntry
         date_picker = DateEntry(date_frame, width=12, background='darkblue',
@@ -1560,7 +1560,7 @@ def customerBookingMenu():
         date_picker.grid(row=0, column=1, padx=5)
         calendar_available = True
     except ImportError:
-        # Fallback: simple entry with placeholder
+        
         date_picker = tk.Entry(date_frame, width=15)
         date_picker.insert(0, "YYYY-MM-DD")
         date_picker.grid(row=0, column=1, padx=5)
