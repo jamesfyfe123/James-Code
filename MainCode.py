@@ -9,7 +9,7 @@ import datetime
 import random
 
 # ============================================
-# DATABASE SETUP (with UNIQUE constraints)
+# DATABASE SETUP 
 # ============================================
 connection = sqlite3.connect("drivingschool.db")
 cursor = connection.cursor()
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS tblInstructor
 """
 cursor.execute(sqlCommand)
 
-# Customer table – now with UNIQUE to prevent duplicates
+# Customer table 
 sqlCommand = """
 CREATE TABLE IF NOT EXISTS tblCustomer
 (
@@ -116,7 +116,7 @@ def getID_from_combobox(text):
         return None
 
 # ============================================
-# DEFAULT DATA – NEVER DELETES, PRESERVES IDs
+# DEFAULT DATA 
 # ============================================
 def create_default_data():
     """Create default demo data ONLY if it doesn't already exist."""
@@ -176,7 +176,6 @@ def create_default_data():
                           instructor_id, random.choice([50, 60, 70])))
 
         conn.commit()
-        print("✅ Default data verified – IDs are stable.")
         print("   Admin: admin / admin123")
         print("   Instructor: sarah / sarah123")
         print("   Customers: Alice Wilson (07456789012), Bob Davis (07567890123)")
