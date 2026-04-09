@@ -193,7 +193,7 @@ def login_screen():
     create_default_data()
     
     root = tk.Tk()
-    root.geometry("400x650")
+    root.geometry("400x500")
     root.title("LD Driving School - Login")
     root.resizable(False, False)
     root.configure(bg="#7392F0")
@@ -215,12 +215,7 @@ def login_screen():
     except:
         pass
     
-    # Demo credentials box
-    demo_frame = tk.LabelFrame(frame, text="Demo Credentials", bg="#BCF0FE", font=("Aptos", 10))
-    demo_frame.grid(row=2, column=0, columnspan=2, pady=10, padx=5, sticky="ew")
-    tk.Label(demo_frame, text="Admin: admin / admin123", bg="#BCF0FE", font=("Arial", 9)).pack(pady=2)
-    tk.Label(demo_frame, text="Instructor: sarah / sarah123", bg="#BCF0FE", font=("Arial", 9)).pack(pady=2)
-    tk.Label(demo_frame, text="Customer: Alice Wilson / 07456789012", bg="#BCF0FE", font=("Arial", 9)).pack(pady=2)
+   
     
     notebook = ttk.Notebook(frame)
     notebook.grid(row=3, column=0, columnspan=2, pady=10)
@@ -295,8 +290,9 @@ def login_screen():
         
         conn = sqlite3.connect("drivingschool.db")
         cur = conn.cursor()
+        mobile = mobile.replace(" ", "")
         cur.execute("SELECT customerID, firstName, surname FROM tblCustomer WHERE firstName=? AND surname=? AND mobileNum=?", 
-                   (first, last, mobile))
+           (first, last, mobile))
         result = cur.fetchone()
         if result:
             global current_user_id, current_user_role, current_user_name
@@ -402,7 +398,7 @@ def customerMenu():
                 messagebox.showerror("Error", "DOB must be DD/MM/YYYY")
                 return
             try:
-                cur.execute("INSERT INTO tblcustomer VALUES (NULL,?,?,?,?,?,?,?)", data)
+                cur.execute("INSERT INTO tblCustomer (firstName, surname, mobileNum, dateOfBirth, postcode, email, emergencyNum) VALUES (?,?,?,?,?,?,?)", data)
                 conn.commit()
                 messagebox.showinfo("Success", "Customer added")
                 root_add.destroy()
@@ -484,12 +480,19 @@ def customerMenu():
             if messagebox.askyesno("Confirm Delete", "Are you sure?"):
                 conn = sqlite3.connect("drivingschool.db")
                 cur = conn.cursor()
-                cur.execute("DELETE FROM tblcustomer WHERE customerID = ?", (cid,))
-                conn.commit()
-                conn.close()
-                messagebox.showinfo("Deleted", "Customer removed")
-                rdelete.destroy()
-                DisplayForm()
+                cur.execute("SELECT COUNT(*) FROM tblBooking WHERE customerID = ?", (cid,))
+                booking_count = cur.fetchone()[0]
+                if booking_count > 0:
+                    if not messagebox.askyesno("Warning", f"This customer has {booking_count} booking(s). Deleting them will also remove their bookings. Continue?"):
+                        conn.close()
+                        return
+                cur.execute("DELETE FROM tblBooking WHERE customerID = ?", (cid,))
+            cur.execute("DELETE FROM tblcustomer WHERE customerID = ?", (cid,))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deleted", "Customer removed")
+            rdelete.destroy()
+            DisplayForm()
         
         rdelete = tk.Toplevel(top)
         rdelete.geometry("480x150")
