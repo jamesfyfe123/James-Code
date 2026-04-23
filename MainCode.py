@@ -835,6 +835,9 @@ def instructorMenu():
     
     DisplayForm()
 
+def getID_from_combobox(text):
+    return text.split("ID:")[-1].strip()
+
 def lessonMenu():
     global root
     root.withdraw()
@@ -920,6 +923,15 @@ def lessonMenu():
             if not all([lesson_type, date, time, duration]):
                 messagebox.showerror("Error", "Please fill all required fields")
                 return
+            try:
+                cost = int(cost)
+            except ValueError:
+                messagebox.showerror("Error", "Cost must be a number")
+            if len(date) != 10 or date[4] != "-" or date[7] != "-":
+                messagebox.showerror("Error", "Date must be in format YYYY-MM-DD")
+                return
+            
+            
             instructor_id = None
             if instructor:
                 instructor_id = int(instructor.split()[-1])
@@ -1014,7 +1026,7 @@ def lessonMenu():
     
     tk.Button(btn_frame, text="Create Lesson Slot", width=18, bg="white", command=add).grid(row=0, column=0, padx=5)
     tk.Button(btn_frame, text="Delete Lesson Slot", width=18, bg="white", command=delete).grid(row=0, column=1, padx=5)
-    tk.Button(btn_frame, text="Back", width=18, bg="white", command=destroy_menu).grid(row=0, column=2, padx=5)
+    tk.Button(btn_frame, text="Back", width=18, bg="white", command=destroy_menu).grid(row=0, column=3, padx=5)
     
     DisplayForm()
 
@@ -1079,56 +1091,7 @@ def bookingMenu():
         finally:
             conn.close()
     
-    def fix_foreign_keys():
-        conn = sqlite3.connect("drivingschool.db")
-        cur = conn.cursor()
-        issues_found = False
-        fixes_applied = 0
-        print("\n" + "="*50)
-        print("FOREIGN KEY CHECK & FIX")
-        print("="*50)
-        cur.execute("SELECT bookingID, customerID, lessonID FROM tblBooking")
-        bookings = cur.fetchall()
-        for booking_id, customer_id, lesson_id in bookings:
-            print(f"\nChecking booking {booking_id}: CustomerID {customer_id}, LessonID {lesson_id}")
-            cur.execute("SELECT COUNT(*) FROM tblCustomer WHERE customerID = ?", (customer_id,))
-            customer_exists = cur.fetchone()[0] > 0
-            cur.execute("SELECT COUNT(*) FROM tblLesson WHERE lessonID = ?", (lesson_id,))
-            lesson_exists = cur.fetchone()[0] > 0
-            if not customer_exists:
-                print(f"  ❌ Customer {customer_id} does not exist!")
-                issues_found = True
-                cur.execute("SELECT customerID FROM tblCustomer LIMIT 1")
-                valid_customer = cur.fetchone()
-                if valid_customer:
-                    new_customer_id = valid_customer[0]
-                    cur.execute("UPDATE tblBooking SET customerID = ? WHERE bookingID = ?", (new_customer_id, booking_id))
-                    print(f"  ✅ Fixed: Updated to CustomerID {new_customer_id}")
-                    fixes_applied += 1
-                else:
-                    print("  ❌ No valid customers found!")
-            if not lesson_exists:
-                print(f"  ❌ Lesson {lesson_id} does not exist!")
-                issues_found = True
-                cur.execute("SELECT lessonID FROM tblLesson LIMIT 1")
-                valid_lesson = cur.fetchone()
-                if valid_lesson:
-                    new_lesson_id = valid_lesson[0]
-                    cur.execute("UPDATE tblBooking SET lessonID = ? WHERE bookingID = ?", (new_lesson_id, booking_id))
-                    print(f"  ✅ Fixed: Updated to LessonID {new_lesson_id}")
-                    fixes_applied += 1
-                else:
-                    print("  ❌ No valid lessons found!")
-            if customer_exists and lesson_exists:
-                print(f"  ✅ All foreign keys valid")
-        if fixes_applied > 0:
-            conn.commit()
-            print(f"\n✅ Applied {fixes_applied} fixes")
-        else:
-            print(f"\n✅ No issues found")
-        conn.close()
-        messagebox.showinfo("Foreign Key Check", f"Fixes applied: {fixes_applied}")
-        display_bookings()
+    
     
     def cancel_booking():
         selected = tree.selection()
@@ -1264,7 +1227,7 @@ def bookingMenu():
     tk.Button(btn_frame, text="Manual Booking", width=18, bg="white", command=create_manual_booking).grid(row=0, column=1, padx=5)
     tk.Button(btn_frame, text="Mark as Paid", width=18, bg="white", command=mark_as_paid).grid(row=0, column=2, padx=5)
     tk.Button(btn_frame, text="Cancel Booking", width=18, bg="red", fg="white", command=cancel_booking).grid(row=0, column=3, padx=5)
-    tk.Button(btn_frame, text="Fix Foreign Keys", width=18, bg="yellow", command=fix_foreign_keys).grid(row=0, column=4, padx=5)
+    
     
     tk.Button(top, text="Back", width=18, bg="white", command=destroy_menu).pack(pady=10)
     display_bookings()
