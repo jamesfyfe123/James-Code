@@ -287,7 +287,15 @@ def login_screen():
         if not all([first, last, mobile]):
             messagebox.showerror("Error", "Please fill all fields")
             return
+        # Validation: first name must not contain numbers
+        if any(char.isdigit() for char in first):
+            messagebox.showerror("Error", "First name cannot contain numbers")
+            return
         
+        # Validation: mobile number must be numeric
+        if not mobile.isdigit():
+            messagebox.showerror("Error", "Mobile number must contain only digits")
+            return
         conn = sqlite3.connect("drivingschool.db")
         cur = conn.cursor()
         mobile = mobile.replace(" ", "")
@@ -480,19 +488,24 @@ def customerMenu():
             if messagebox.askyesno("Confirm Delete", "Are you sure?"):
                 conn = sqlite3.connect("drivingschool.db")
                 cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) FROM tblBooking WHERE customerID = ?", (cid,))
-                booking_count = cur.fetchone()[0]
-                if booking_count > 0:
-                    if not messagebox.askyesno("Warning", f"This customer has {booking_count} booking(s). Deleting them will also remove their bookings. Continue?"):
-                        conn.close()
-                        return
-                cur.execute("DELETE FROM tblBooking WHERE customerID = ?", (cid,))
-            cur.execute("DELETE FROM tblcustomer WHERE customerID = ?", (cid,))
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deleted", "Customer removed")
-            rdelete.destroy()
-            DisplayForm()
+                try:
+                    cur.execute("SELECT COUNT(*) FROM tblBooking WHERE customerID = ?", (cid,))
+                    booking_count = cur.fetchone()[0]
+                    if booking_count > 0:
+                        if not messagebox.askyesno("Warning", f"This customer has {booking_count} booking(s). Deleting them will also remove their bookings. Continue?"):
+                            conn.close()
+                            return
+                        cur.execute("DELETE FROM tblBooking WHERE customerID = ?", (cid,))
+                    cur.execute("DELETE FROM tblCustomer WHERE customerID = ?", (cid,))
+                    conn.commit()
+                    messagebox.showinfo("Deleted", "Customer removed")
+                    rdelete.destroy()
+                    DisplayForm()
+                except Exception as e:
+                    messagebox.showerror("Error", f"Deletion failed: {e}")
+                    conn.rollback()
+                finally:
+                    conn.close()
         
         rdelete = tk.Toplevel(top)
         rdelete.geometry("480x150")
@@ -506,7 +519,7 @@ def customerMenu():
         search_cb = ttk.Combobox(rdelete, values=customers, width=30)
         search_cb.place(x=160, y=50)
         tk.Button(rdelete, text="Submit", width=13, bg="white", command=deleteCustomer).place(x=180, y=95)
-    
+
     tk.Button(btn_frame, text="Add Customer", width=18, bg="white", command=add).grid(row=0, column=0, padx=8)
     tk.Button(btn_frame, text="Edit Customer", width=18, bg="white", command=edit).grid(row=0, column=1, padx=8)
     tk.Button(btn_frame, text="Delete Customer", width=18, bg="white", command=delete).grid(row=0, column=2, padx=8)
@@ -834,9 +847,6 @@ def instructorMenu():
     tk.Button(btn_frame, text="Back", width=18, command=destroy_menu, bg="white").grid(row=1, column=1, pady=12)
     
     DisplayForm()
-
-def getID_from_combobox(text):
-    return text.split("ID:")[-1].strip()
 
 def lessonMenu():
     global root
